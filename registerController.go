@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"DataCertPlatform/models"
 	"github.com/astaxie/beego"
+	"DataCertPlatform/models"
 )
 
 type RegisterController struct {

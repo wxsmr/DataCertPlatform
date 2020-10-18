@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"github.com/astaxie/beego"
 )
 
@@ -13,6 +12,5 @@ type MainController struct {
  * 展示默认的首页：即用户注册页面
  */
 func (c *MainController) Get() {
-	fmt.Println("hello world")
 	c.TplName = "register.html"
 }

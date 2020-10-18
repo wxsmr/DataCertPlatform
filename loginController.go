@@ -1,9 +1,9 @@
 package controllers
 
 import (
+	"github.com/astaxie/beego"
 	"DataCertPlatform/models"
 	"fmt"
-	"github.com/astaxie/beego"
 )
 
 type LoginController struct {
