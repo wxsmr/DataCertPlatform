@@ -8,6 +8,7 @@ import (
 	"DataCertPlatform/models"
 	"time"
 	"DataCertPlatform/utils"
+	"DataCertPlatform/blockchain"
 )
 
 /**
@@ -57,7 +58,8 @@ func (u *UploadFileController) Post() {
 
 	//把上传的文件作为记录保存到数据库当中
 	//① 计算md5值
-	md5String, err := utils.MD5HashReader(file)
+	saveFile, err := os.Open(saveFilePath)
+	md5String, err := utils.MD5HashReader(saveFile)
 	if err != nil {
 		u.Ctx.WriteString("抱歉, 电子数据认证失败。")
 		return
@@ -77,6 +79,14 @@ func (u *UploadFileController) Post() {
 		u.Ctx.WriteString("抱歉，电子数据认证保存失败，请稍后再试!")
 		return
 	}
+	fmt.Println("恭喜,已经将数据保存到区块链中！")
+	//③ 将用户上传的文件的md5值和sha256值保存到区块链上，即数据上链
+	_, err = blockchain.CHAIN.SaveData([]byte(md5String))
+    if err != nil{
+    	u.Ctx.WriteString("抱歉，数据上联错误:"+err.Error())
+		return
+	}
+
 	//上传文件保存到数据库中成功
 	records, err := models.QueryRecordsByUserId(user1.Id)
 	if err != nil {
