@@ -28,7 +28,7 @@ func (u *UploadFileController) Post() {
 	title := u.Ctx.Request.PostFormValue("upload_title") //用户输入的标题
 
 	fmt.Println("电子数据标签：", title)
-	file, header, err := u.GetFile("lh")
+	file, header, err := u.GetFile("yuhongwei")
 	if err != nil { //解析客户端提交的文件出现错误
 		u.Ctx.WriteString("抱歉，文件解析失败，请重试！")
 		return
@@ -46,7 +46,7 @@ func (u *UploadFileController) Post() {
 
 	//3、计算文件的SHA256值
 	fileHash, err := utils.SHA256HashReader(file)
-	fmt.Println(fileHash)
+	//fmt.Println(fileHash)
 
 	//先查询用户id
 	user1, err := models.User{Phone: phone}.QueryUserByPhone()
@@ -79,13 +79,31 @@ func (u *UploadFileController) Post() {
 		u.Ctx.WriteString("抱歉，电子数据认证保存失败，请稍后再试!")
 		return
 	}
-	fmt.Println("恭喜,已经将数据保存到区块链中！")
+
+	user := &models.User{
+		Phone: phone,
+	}
+	user, _ = user.QueryUserByPhone()
+	fmt.Println("用户的信息：", user.Name, user.Phone, user.Card)
 	//③ 将用户上传的文件的md5值和sha256值保存到区块链上，即数据上链
-	_, err = blockchain.CHAIN.SaveData([]byte(md5String))
-    if err != nil{
-    	u.Ctx.WriteString("抱歉，数据上联错误:"+err.Error())
+	certRecord := models.CertRecord{
+		CertId:   []byte(md5String),
+		CertHash: []byte(fileHash),
+		CertName: user.Name,
+		CertCard: user.Card,
+		Phone:    user.Phone,
+		FileName: header.Filename,
+		FileSize: header.Size,
+		CertTime: time.Now().Unix(),
+	}
+	//序列化
+	certBytes, _ := certRecord.Serialize()
+	_, err = blockchain.CHAIN.SaveData(certBytes)
+	if err != nil {
+		u.Ctx.WriteString("抱歉，数据上链错误：" + err.Error())
 		return
 	}
+	//fmt.Println("恭喜，已经数据保存到区块链中，区块高度是:", block.Height)
 
 	//上传文件保存到数据库中成功
 	records, err := models.QueryRecordsByUserId(user1.Id)
@@ -107,7 +125,7 @@ func (u *UploadFileController) Post1() {
 	title := u.Ctx.Request.PostFormValue("upload_title") //用户输入的标题
 
 	//用户上传的文件
-	file, header, err := u.GetFile("lh")
+	file, header, err := u.GetFile("yuhongwei")
 	if err != nil { //解析客户端提交的文件出现错误
 		u.Ctx.WriteString("抱歉，文件解析失败，请重试！")
 		return
@@ -177,7 +195,7 @@ func (u *UploadFileController) Post1() {
 	fmt.Println("要保存的文件名", saveName)
 	//fromFile: 文件，
 	//toFile: 要保存的文件路径
-	err = u.SaveToFile("lh", saveName)
+	err = u.SaveToFile("yuhongwei", saveName)
 	if err != nil {
 		fmt.Println(err.Error())
 		u.Ctx.WriteString("抱歉，文件认证失败，请重试!")
